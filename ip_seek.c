@@ -123,12 +123,12 @@ void read_record(unsigned char *country, unsigned char *area)
 int main(int argc, char *argv[])
 {
      if(argc < 3){
-          fprintf(stderr, "Usage: %s IP DATA_FILE\n", argv[0]);
+          fprintf(stderr, "Usage: %s DATA_FILE IP\n", argv[0]);
           exit(EXIT_FAILURE);
      }
 
-     const char *ip = argv[1];
-     const char *filename = argv[2];
+     const char *filename = argv[1];
+     const char *ip = argv[2];
 
      data = fopen(filename, "r");
      if(!data){

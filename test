@@ -10,5 +10,5 @@ for i in 166.111.8.238 \
     10.0.1.2 
 do
     echo -n $i ", " 
-    ./ip_seek $i ~/etc/QQWry.dat | iconv -f gbk -t utf8 
+    ./ip_seek ~/etc/QQWry.dat $i | iconv -f gbk -t utf8 
 done
