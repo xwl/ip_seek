@@ -56,16 +56,20 @@ unsigned int binary_search(unsigned int index_start,
      unsigned int ip_binary = ntohl(inet_addr(ip));
      unsigned int index_base = index_start;
      unsigned int start = 0, end = (index_end - index_start) / INDEX_SIZE;
-
-     while (start <= end){
+     unsigned int ip_binary_tmp = 0;
+     
+     while (start < end){
           unsigned int mid = (start + end) / 2;
           fseek(data, index_base + mid * INDEX_SIZE, SEEK_SET);
 
-          unsigned int ip_binary_tmp;
           fread(&ip_binary_tmp, sizeof(ip_binary_tmp), 1, data);
-
           if(is_big_endian)
                ip_binary_tmp = little2big32(ip_binary_tmp);
+
+          /* debug */
+          /* struct in_addr in; */
+          /* in.s_addr = htonl(ip_binary_tmp); */
+          /* printf("%s\n", inet_ntoa(in)); */
           
           if(ip_binary == ip_binary_tmp)
                break;
@@ -75,10 +79,21 @@ unsigned int binary_search(unsigned int index_start,
                start = mid + 1;
      }
 
-     /* Exact IP may not exist in DATA_FILE, anyhow, try its most adjacent ip. */
-     unsigned int record_offset = 0;
-     fread(&record_offset, RECORD_OFFSET_SZ, 1, data);
+     /* Exact IP may not exist in DATA_FILE, anyhow, try its most adjacent ip. */     
+     if(start == end){
+          fseek(data, index_base + start * INDEX_SIZE, SEEK_SET);
 
+          fread(&ip_binary_tmp, sizeof(ip_binary_tmp), 1, data);
+          if(is_big_endian)
+               ip_binary_tmp = little2big32(ip_binary_tmp);
+          
+          if(ip_binary < ip_binary_tmp)
+               fseek(data, index_base + (start - 1) * INDEX_SIZE + 4, SEEK_SET);
+     }
+     
+     unsigned int record_offset = 0;
+
+     fread(&record_offset, RECORD_OFFSET_SZ, 1, data);
      if(is_big_endian)
           record_offset = little2big24(record_offset);
 
@@ -87,8 +102,8 @@ unsigned int binary_search(unsigned int index_start,
 
 void read_till_zero(unsigned char *s)
 {
-     unsigned char c;
-     long redirect, restore;
+     unsigned char c = 0;
+     long redirect = 0, restore = 0;
 
      fread(&c, sizeof(c), 1, data);
 
@@ -139,7 +154,7 @@ int main(int argc, char *argv[])
      is_big_endian = (htonl(1) == 1);
      
      /* 1. read index offsets */
-     unsigned int index_start, index_end;
+     unsigned int index_start = 0, index_end = 0;
      
      fread(&index_start, sizeof(index_start), 1, data);
      fread(&index_end,   sizeof(index_end),   1, data);
@@ -160,14 +175,12 @@ int main(int argc, char *argv[])
      read_record(country, area);
 
      printf("%s", country);
-
      if(area[0])
           printf(", %s", area);
-
      printf("\n");
      
      return 0;
 }
 
 
-/* ip.c ends here */
+/* ip_seek.c ends here */
